@@ -9,7 +9,9 @@ after_build:
   - dotnet pack --configuration release ValveResourceFormat\ValveResourceFormat.csproj
   - dotnet publish --configuration Release -p:PublishSingleFile=true --runtime win-x64 GUI\GUI.csproj
   - dotnet publish --configuration Release -p:PublishSingleFile=true --runtime win-x64 Decompiler\Decompiler.csproj
+  - rmdir /S /Q Decompiler\obj
   - dotnet publish --configuration Release -p:PublishSingleFile=true --runtime linux-x64 Decompiler\Decompiler.csproj
+  - rmdir /S /Q Decompiler\obj
   - dotnet publish --configuration Release -p:PublishSingleFile=true --runtime osx-x64 Decompiler\Decompiler.csproj
 
 test_script:
@@ -30,7 +32,7 @@ artifacts:
 deploy:
 - provider: GitHub
   auth_token:
-    secure: nK1ZJwyjxiXhpKYZ8AjsgEqtvTYJR9A4hc5KDseSNi/CO+9scXnuc1A/ZODoAja4
+    secure: hnDOlho1DI06VB/xFX6uvqoBUxo41/jV/186OLIMxOzFfsBaPoTavjVSqQdVrebT
   draft: false
   prerelease: true
   on:

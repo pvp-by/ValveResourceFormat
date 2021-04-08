@@ -119,7 +119,7 @@ namespace GUI.Types.Renderer
             }
         }
 
-        private void SetSkin(string skin)
+        public void SetSkin(string skin)
         {
             var materialGroups = Model.Data.GetArray<IKeyValueCollection>("m_materialGroups");
             string[] defaultMaterials = null;
@@ -146,6 +146,14 @@ namespace GUI.Types.Renderer
                     break;
                 }
             }
+
+            if (meshRenderers.Count > 0)
+            {
+                foreach (var mesh in meshRenderers)
+                {
+                    mesh.SetSkin(skinMaterials);
+                }
+            }
         }
 
         private void LoadMeshes()
@@ -163,12 +171,6 @@ namespace GUI.Types.Renderer
                 var newResource = Scene.GuiContext.LoadFileByAnyMeansNecessary(refMesh.MeshName + "_c");
                 if (newResource == null)
                 {
-                    continue;
-                }
-
-                if (!newResource.ContainsBlockType(BlockType.VBIB))
-                {
-                    Console.WriteLine("Old style model, no VBIB!");
                     continue;
                 }
 

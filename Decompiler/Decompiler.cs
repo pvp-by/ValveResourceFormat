@@ -72,6 +72,15 @@ namespace Decompiler
         [Option("-f|--vpk_filepath", "File path filter, example: panorama\\ or \"panorama\\\\\"", CommandOptionType.SingleValue)]
         public string FileFilter { get; private set; }
 
+        [Option("-l|--vpk_list", "Lists all resources in given VPK. File extension and path filters apply.", CommandOptionType.NoValue)]
+        public bool ListResources { get; }
+
+        [Option("--gltf_export_format", "Exports meshes/models in given glTF format. Must be either 'gltf' (default) or 'glb'", CommandOptionType.SingleValue)]
+        public string GltfExportFormat { get; } = "gltf";
+
+        [Option("--gltf_export_materials", "Whether to export materials during glTF exports (warning: slow!)", CommandOptionType.NoValue)]
+        public bool GltfExportMaterials { get; }
+
         private string[] ExtFilterList;
         private bool IsInputFolder;
 
@@ -103,6 +112,13 @@ namespace Decompiler
             if (ExtFilter != null)
             {
                 ExtFilterList = ExtFilter.Split(',');
+            }
+
+            if (GltfExportFormat != "gltf" && GltfExportFormat != "glb")
+            {
+                Console.Error.WriteLine("glTF export format must be either 'gltf' or 'glb'.");
+
+                return 1;
             }
 
             var paths = new List<string>();
@@ -233,6 +249,7 @@ namespace Decompiler
             {
                 case Package.MAGIC: ParseVPK(path, fs); return;
                 case CompiledShader.MAGIC: ParseVCS(path, fs); return;
+                case ToolsAssetInfo.MAGIC2:
                 case ToolsAssetInfo.MAGIC: ParseToolsAssetInfo(path, fs); return;
                 case BinaryKV3.MAGIC3:
                 case BinaryKV3.MAGIC2:
@@ -611,6 +628,21 @@ namespace Decompiler
                     orderedEntries = orderedEntries.Where(x => ExtFilterList.Contains(x.Key)).ToList();
                 }
 
+                if (ListResources)
+                {
+                    var listEntries = orderedEntries.SelectMany(x => x.Value);
+                    foreach (var entry in listEntries)
+                    {
+                        var filePath = FixPathSlashes(entry.GetFullPath());
+                        if (FileFilter != null && !filePath.StartsWith(FileFilter, StringComparison.Ordinal))
+                        {
+                            continue;
+                        }
+                        Console.WriteLine("\t{0}", filePath);
+                    }
+                    return;
+                }
+
                 if (CollectStats)
                 {
                     TotalFiles += orderedEntries
@@ -761,14 +793,15 @@ namespace Decompiler
                         // TODO: Hook this up in FileExtract
                         if (resource.ResourceType == ResourceType.Mesh || resource.ResourceType == ResourceType.Model)
                         {
-                            var outputFile = Path.Combine(OutputFile, Path.ChangeExtension(filePath, "gltf"));
+                            var outputExtension = GltfExportFormat;
+                            var outputFile = Path.Combine(OutputFile, Path.ChangeExtension(filePath, outputExtension));
 
                             Directory.CreateDirectory(Path.GetDirectoryName(outputFile));
 
                             var exporter = new GltfModelExporter
                             {
-                                ExportMaterials = false,
-                                ProgressReporter = new ConsoleProgressReporter(),
+                                ExportMaterials = GltfExportMaterials,
+                                ProgressReporter = new Progress<string>(progress => Console.WriteLine($"--- {progress}")),
                                 FileLoader = fileLoader
                             };
 

@@ -170,11 +170,6 @@ namespace GUI.Types.Viewers
                     break;
 
                 case ResourceType.Mesh:
-                    if (!resource.ContainsBlockType(BlockType.VBIB))
-                    {
-                        Console.WriteLine("Old style model, no VBIB!");
-                        break;
-                    }
 
                     Program.MainForm.Invoke(new ExportDel(AddToExport), resTabs, $"Export {Path.GetFileName(vrfGuiContext.FileName)} as glTF",
                         vrfGuiContext.FileName, new ExportData {Resource = resource, VrfGuiContext = vrfGuiContext});
@@ -345,7 +340,12 @@ namespace GUI.Types.Viewers
                 || resource.ResourceType == ResourceType.SoundStackScript
                 || resource.ResourceType == ResourceType.EntityLump)
             {
-                resTabs.SelectTab(resTabs.TabCount - 1);
+                foreach (TabPage tab2 in resTabs.TabPages) {
+                    if (tab2.Text == "DATA") {
+                        resTabs.SelectTab(tab2);
+                        break;
+                    }
+                }
             }
 
             tab.Controls.Add(resTabs);
